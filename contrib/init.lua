@@ -32,10 +32,10 @@ do
     end
   end
 
-  function _M.table_concat(t)
+  function _M.table_concat(t, sep, i, j)
     local table, output = table, {}
     _table_concat(t, output)
-    return tconcat(output)
+    return tconcat(output, sep, i, j)
   end
 end
 
@@ -160,6 +160,18 @@ function _M.table_append(t, v)
   t[#t + 1] = v
 end
 
+-- Run given callback on each element
+function _M.table_each(t, callback)
+  local stop
+
+  for k, v in pairs(t) do
+    stop = callback(k, v)
+    if stop then
+      break
+    end
+  end
+end
+
 -- Creates a new table with metatable set to _M.metahelper
 -- If table passed as argument, only assigns the metatable
 function _M.seawolf_table(t)
@@ -188,6 +200,77 @@ function _M.module_exists(name)
   end
 end
 
+-- Copied and adapted from: https://gist.github.com/HoraceBury/9001099
+--
+-- Cleans rich text so that HTML is cleanly removed, p and br tags are reduced
+-- to new lines and some special characters are replaced with the text
+-- equivelents.
+function _M.strip_tags(text)
+  text = text .. '!!>' -- patch (fix non-closed tag)
+
+  -- list of strings to replace (the order is important to avoid conflicts)
+  local cleaner = {
+    { "&amp;", "&" }, -- decode ampersands
+    { "&#151;", "-" }, -- em dash
+    { "&#146;", "'" }, -- right single quote
+    { "&#147;", "\"" }, -- left double quote
+    { "&#148;", "\"" }, -- right double quote
+    { "&#150;", "-" }, -- en dash
+    { "&#160;", " " }, -- non-breaking space
+    { "<br ?/?>", "\n" }, -- all <br> tags whether terminated or not (<br> <br/> <br />) become new lines
+    { "</p>", "\n" }, -- ends of paragraphs become new lines
+    { "(%b<>)", "" }, -- all other html elements are completely removed (must be done last)
+    { "\r", "\n" }, -- return carriage become new lines
+    { "[\n\n]+", "\n" }, -- reduce all multiple new lines with a single new line
+    { "^\n*", "" }, -- trim new lines from the start...
+    { "\n*$", "" }, -- ... and end
+  }
+
+  -- clean html from the string
+  for i = 1, #cleaner do
+    local cleans = cleaner[i]
+    text = text:gsub(cleans[1], cleans[2])
+  end
+
+  return text:gsub('!!>', '') -- unpatch
+end
+
+-- Parse given text to date parts
+-- by develCuy and Outlastsheep
+do
+  local date_map = {
+    month = {
+      Jan = '01',
+      Feb = '02',
+      Mar = '03',
+      Apr = '04',
+      May = '05',
+      Jun = '06',
+      Jul = '07',
+      Aug = '08',
+      Sep = '09',
+      Oct = '10',
+      Nov = '11',
+      Dec = '12',
+    }
+  }
+
+  function _M.parse_date(text)
+    local dow, day, month_name, year, hours, minutes, seconds, timezone = text:match('(.-), (.-) (.-) (.-) (.-):(.-):(.-) (.+)')
+    return {
+      dow = dow,
+      month_name = month_name,
+      day = day,
+      month = date_map.month[month_name],
+      year = year,
+      hours = hours,
+      minutes = minutes,
+      seconds = seconds,
+      timezone = timezone,
+    }
+  end
+end
+
 -- Helper metatable
 _M.metahelper = {
   __index = function(t, k)
@@ -203,6 +286,8 @@ _M.metahelper = {
   dump = _M.table_dump,
   insert_multiple = _M.table_insert_multiple,
   append = _M.table_append,
+  each = _M.table_each,
+  sort = table.sort,
 }
 
 return _M
