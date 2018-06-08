@@ -1,11 +1,12 @@
 package = 'seawolf'
-version = '0.8-1'
+version = '1.0-0'
 source = {
   url = 'git://github.com/ophal/seawolf.git',
-  tag = 'v0.8-1',
+  tag = 'master',
 }
 description = {
-  summary = 'Ophal toolkit library for back-end web development.',
+  summary = 'Ophal toolkit library for back-end web development - HEAD.',
+  detailed = 'Current development branch of Seawolf.',
   homepage = 'https://github.com/ophal/seawolf',
   license = 'GPL-3',
   maintainer = 'Fernando Paredes Garcia <fernando@develcuy.com>',
@@ -21,6 +22,7 @@ dependencies = {
 build = {
   type = 'builtin',
   modules = {
+    ['seawolf'] = 'init.lua',
     ['seawolf.behaviour'] = 'behaviour/init.lua',
     ['seawolf.calendar'] = 'calendar/init.lua',
     ['seawolf.contrib'] = 'contrib/init.lua',
@@ -31,6 +33,5 @@ build = {
     ['seawolf.text'] = 'text/init.lua',
     ['seawolf.text.preg'] = 'text/preg.lua',
     ['seawolf.variable'] = 'variable/init.lua',
-    ['seawolf.variable.serialize'] = 'variable/serialize/init.lua',
   },
 }

@@ -1,16 +1,16 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = 'seawolf'
-version = '0.8-1'
+version = '1.0-1'
 -- LuaDist source
 source = {
-  tag = "0.8-1",
+  tag = "1.0-1",
   url = "git://github.com/LuaDist-testing/seawolf.git"
 }
 -- Original source
 -- source = {
 --   url = 'git://github.com/ophal/seawolf.git',
---   tag = 'v0.8-1',
+--   tag = 'v1.0-1',
 -- }
 description = {
   summary = 'Ophal toolkit library for back-end web development.',
@@ -23,12 +23,13 @@ dependencies = {
   'lpeg',
   'luasocket',
   'luafilesystem',
-  'md5',
+  'lsha2',
   'luuid = 20120501-1',
 }
 build = {
   type = 'builtin',
   modules = {
+    ['seawolf'] = 'init.lua',
     ['seawolf.behaviour'] = 'behaviour/init.lua',
     ['seawolf.calendar'] = 'calendar/init.lua',
     ['seawolf.contrib'] = 'contrib/init.lua',
@@ -39,6 +40,5 @@ build = {
     ['seawolf.text'] = 'text/init.lua',
     ['seawolf.text.preg'] = 'text/preg.lua',
     ['seawolf.variable'] = 'variable/init.lua',
-    ['seawolf.variable.serialize'] = 'variable/serialize/init.lua',
   },
 }
