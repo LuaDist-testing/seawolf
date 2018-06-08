@@ -1,15 +1,16 @@
-local seawolf = require 'seawolf'.__build 'text'
+local seawolf = require 'seawolf'.__build('text', 'contrib')
 local string, require, substr = string, require, seawolf.text.substr
 local tinsert, tconcat, mfloor, tremove = table.insert, tconcat, math.floor, table.remove
 local ssub, slen, sformat = string.sub, string.len, string.format
 local odate, otime = os.date, os.time
+local module_exists = seawolf.contrib.module_exists
 
-local m ={}
+local _M = {}
 
 -- Generate a unique ID
 -- Migrated from Drupy (authored by Brendon Crawford)
 -- by Fernando P. García
-function m.uniqid(prefix, more_entropy)
+function _M.uniqid(prefix, more_entropy)
   if more_entropy == nil then more_entropy = false end
 
   local out, num, prefix, charmap, i, pos
@@ -34,7 +35,7 @@ end
 
 -- Format a local time/date
 -- by Fernando P. García
-function m.date(format_, timestamp)
+function _M.date(format_, timestamp)
   local t, d, gmd, gmt, date_, year, month, i, c
 
   t = {
@@ -124,9 +125,9 @@ function m.date(format_, timestamp)
         tinsert(date_, otime(odate('*t', timestamp)) - otime(odate('!*t', timestamp)))
       end
     elseif c == 'c'  then -- ISO 8601 date
-      tinsert(date_, odate((gmt and '!' or '') .. '%Y-%m-%dT%H:%M:%S', timestamp) .. m.date((gmt and '!' or '') .. 'P', timestamp))
+      tinsert(date_, odate((gmt and '!' or '') .. '%Y-%m-%dT%H:%M:%S', timestamp) .. _M.date((gmt and '!' or '') .. 'P', timestamp))
     elseif c == 'r'  then -- ISO 8601 date
-      tinsert(date_, odate((gmt and '!' or '') .. '%a, %e %b %Y %H:%M:%S ', timestamp) .. m.date((gmt and '!' or '') .. 'O', timestamp))
+      tinsert(date_, odate((gmt and '!' or '') .. '%a, %e %b %Y %H:%M:%S ', timestamp) .. _M.date((gmt and '!' or '') .. 'O', timestamp))
     elseif c == 'B' then -- Swatch Internet Time
       tinsert(date_, mfloor(((((
           gmd.sec/60 -- Seconds to Minutes
@@ -149,8 +150,8 @@ end
 
 -- Format a GMT/UTC date/time
 -- by Fernando P. García
-function m.gmdate(format_, timestamp)
-  return m.date('!'.. format_, timestamp)
+function _M.gmdate(format_, timestamp)
+  return _M.date('!'.. format_, timestamp)
 end
 
 IMAGETYPE_GIF = 1
@@ -206,7 +207,7 @@ end
 
 -- Turn on output buffering
 -- by Fernando P. García
-function m.ob_start()
+function _M.ob_start()
   local caller = debug.getinfo(2, [[n]])
   _OB_ENV = getfenv(_G[caller.name])
   _OB_ENV.print = ob_print
@@ -216,7 +217,7 @@ end
 
 -- Return the contents of the output buffer
 -- by Fernando P. García
-function m.ob_get_contents()
+function _M.ob_get_contents()
   if _OB_ENV.print == ob_print then
     return tconcat(_OB_BUFFER[2])
   end
@@ -225,23 +226,23 @@ end
 
 -- Flush (send) the output buffer and turn off output buffering
 -- by Fernando P. García
-function m.ob_end_flush()
+function _M.ob_end_flush()
   if #_OB_BUFFER > 0 and (_OB_ENV.print == ob_print or #_OB_BUFFER[2] > 0) then
     ob_flush()
-    return m.ob_end_clean()
+    return _M.ob_end_clean()
   end
   return false
 end
 
 -- Flush (send) the output buffer
 -- by Fernando P. García
-function m.ob_flush()
+function _M.ob_flush()
   _PRINT_FUNCTION(tconcat(_OB_BUFFER[2]))
 end
 
 -- Clean (erase) the output buffer and turn off output buffering
 -- by Fernando P. García
-function m.ob_end_clean()
+function _M.ob_end_clean()
   if #_OB_BUFFER > 0 then
     _OB_BUFFER = _OB_BUFFER[1] -- point to parent buffer
 
@@ -258,14 +259,14 @@ end
 
 -- Get current buffer contents and delete current output buffer
 -- by Fernando P. García
-function m.ob_get_clean()
-  local output = m.ob_get_contents()
-  m.ob_end_clean()
+function _M.ob_get_clean()
+  local output = _M.ob_get_contents()
+  _M.ob_end_clean()
   return output
 end
 
 -- Copied and adapted from http://lua-users.org/wiki/CopyTable
-function m.clone(object)
+function _M.clone(object)
   local lookup_table = {}
   local function _copy(object)
     if type(object) ~= "table" then
@@ -284,7 +285,7 @@ function m.clone(object)
 end
 
 -- Flush the output buffer
-function m.flush()
+function _M.flush()
  -- TODO: Implement buffering for performance
 end
 
@@ -293,6 +294,7 @@ end
 do
   local _hash = {
     md5 = {},
+    sha1 = {},
     sha224 = {},
     sha256 = {},
     sha384 = {},
@@ -307,8 +309,12 @@ do
 
   _hash.sha256[false] = require 'lsha2'.hash256
 
-  local work, rs = pcall(require, 'sha2')
-  if work then
+  if module_exists 'sha1' then
+    _hash.sha1[false] = require 'sha1'.sha1
+    _hash.sha1[true] = require 'sha1'.binary
+  end
+
+  if module_exists 'sha2' then
     _hash.sha256[true] = require 'sha2'.sha256hex
 
     _hash.sha384[false] = require 'sha2'.sha384hex
@@ -318,15 +324,15 @@ do
     _hash.sha384[true] = require 'sha2'.sha512
   end
 
-  function m.hash(algo, data, raw_output)
-    if raw_output == nil then raw_output = false end
+  function _M.hash(algo, data, binary)
+    if binary == nil then binary = false end
 
     if _hash[algo] then
-      return _hash[algo][raw_output](data)
+      return _hash[algo][binary](data)
     else
       error(('[seawolf.other] in function hash(): unknown hash algorythm "%s"'):format(algo))
     end
   end
 end
 
-return m
+return _M

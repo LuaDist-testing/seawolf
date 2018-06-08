@@ -4,10 +4,10 @@ local ipairs, tostring = ipairs, tostring
 local sformat = string.format
 local sort, tinsert, tconcat = table.sort, table.insert, table.concat
 
-local m = {}
+local _M = {}
 
 -- Recursively print a table.
-function m.table_print(t)
+function _M.table_print(t)
   local print, type, pairs = print, type, pairs
   for _, v in pairs(t) do
     if type(v) == 'table' then
@@ -32,7 +32,7 @@ do
     end
   end
 
-  function m.table_concat(t)
+  function _M.table_concat(t)
     local table, output = table, {}
     _table_concat(t, output)
     return tconcat(output)
@@ -52,7 +52,7 @@ local function value(v, outf, ind, pre)
   elseif t == 'boolean' then
     outf(tostring(v))
   elseif t == 'table' then
-    m.table_dump(v, outf, ind, pre)
+    _M.table_dump(v, outf, ind, pre)
   else
     outf(sformat('%q', tostring(v)))
   end
@@ -65,7 +65,7 @@ end
 -- @param outf Function used to generate the output.
 -- @param ind String with indentation pattern (default = "").
 -- @param pre String with indentation prefix (default = "").
-function m.table_dump(tab, outf, ind, pre)
+function _M.table_dump(tab, outf, ind, pre)
   local sep_n, sep, _n = ",\n", ', ', "\n"
   if (not ind) or (ind == '') then ind = ''; sep_n = ', '; _n = '' end
   if not pre then pre = '' end
@@ -141,32 +141,68 @@ do
   local function _table_shift(_, ...)
     return {...}
   end
-  function m.table_shift(t)
+  function _M.table_shift(t)
     return _table_shift(unpack(t))
   end
 end
 
 -- Insert each item from rows into the target table
-function m.table_insert_multiple(t, rows)
+function _M.table_insert_multiple(t, rows)
+  local c = #t
   for _, v in pairs(rows) do
-    t[#t+1] = v
+    c = c + 1
+    t[c] = v
+  end
+end
+
+-- Insert given value 'v' to the end of table 't' ignoring metatable methods
+function _M.table_append(t, v)
+  t[#t + 1] = v
+end
+
+-- Creates a new table with metatable set to _M.metahelper
+-- If table passed as argument, only assigns the metatable
+function _M.seawolf_table(t)
+  if t == nil then
+    t = {}
+  end
+
+  setmetatable(t, _M.metahelper)
+
+  return t
+end
+
+-- Copied and adapted from http://stackoverflow.com/questions/15429236/how-to-check-if-a-module-exists-in-lua
+function _M.module_exists(name)
+  if package.loaded[name] then
+    return true
+  else
+    for _, searcher in ipairs(package.searchers or package.loaders) do
+      local loader = searcher(name)
+      if type(loader) == 'function' then
+        package.preload[name] = loader
+        return true
+      end
+    end
+    return false
   end
 end
 
 -- Helper metatable
-m.metahelper = {
+_M.metahelper = {
   __index = function(t, k)
-    local meta = m.metahelper
+    local meta = _M.metahelper
     if meta[k] ~= nil then
       return meta[k]
     end
   end,
 
-  shift = m.table_shift,
-  concat = m.table_concat,
-  print = m.table_print,
-  dump = m.table_dump,
-  insert_multiple = m.table_insert_multiple,
+  shift = _M.table_shift,
+  concat = _M.table_concat,
+  print = _M.table_print,
+  dump = _M.table_dump,
+  insert_multiple = _M.table_insert_multiple,
+  append = _M.table_append,
 }
 
-return m
+return _M
