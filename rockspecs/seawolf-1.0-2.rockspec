@@ -1,17 +1,9 @@
--- This file was automatically generated for the LuaDist project.
-
 package = 'seawolf'
-version = '1.0-1'
--- LuaDist source
+version = '1.0-2'
 source = {
-  tag = "1.0-1",
-  url = "git://github.com/LuaDist-testing/seawolf.git"
+  url = 'git://github.com/ophal/seawolf.git',
+  tag = 'v1.0-2',
 }
--- Original source
--- source = {
---   url = 'git://github.com/ophal/seawolf.git',
---   tag = 'v1.0-1',
--- }
 description = {
   summary = 'Ophal toolkit library for back-end web development.',
   homepage = 'https://github.com/ophal/seawolf',
@@ -23,6 +15,7 @@ dependencies = {
   'lpeg',
   'luasocket',
   'luafilesystem',
+  'md5',
   'lsha2',
   'luuid = 20120501-1',
 }
